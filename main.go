@@ -14,6 +14,10 @@ import (
 
 var addr = flag.String("addr", ":8080", "http service address")
 
+type Page struct {
+	name string
+}
+
 func serveHub(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 	if r.URL.Path != "/" {
@@ -37,12 +41,13 @@ func serveLogin(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "templates/home.html")
 	} else {
 		r.ParseForm()
-		data := "Alex"
-		fmt.Println(data)
+		p := new(Page)
+		p.name = "Alex"
 		fmt.Println(r.Form["name"])
+		fmt.Println(p.name)
 		// http.ServeFile(w, r, "templates/start.html")
 		t, _ := template.ParseFiles("templates/start.html")
-		t.Execute(w, data)
+		t.Execute(w, p)
 	}
 }
 
