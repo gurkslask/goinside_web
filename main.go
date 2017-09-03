@@ -6,13 +6,15 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
 
-func serveHome(w http.ResponseWriter, r *http.Request) {
+func serveHub(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 	if r.URL.Path != "/" {
 		http.Error(w, "Not found", 404)
@@ -22,14 +24,34 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-	http.ServeFile(w, r, "home.html")
+	http.ServeFile(w, r, "templates/hub.html")
 }
 
-func dbmain() {
+func serveHome(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "templates/home.html")
+}
+
+func serveLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.Method)
+	if r.Method == "GET" {
+		http.ServeFile(w, r, "templates/home.html")
+	} else {
+		r.ParseForm()
+		data := "Alex"
+		fmt.Println(data)
+		fmt.Println(r.Form["name"])
+		// http.ServeFile(w, r, "templates/start.html")
+		t, _ := template.ParseFiles("templates/start.html")
+		t.Execute(w, data)
+	}
+}
+
+func main() {
 	flag.Parse()
 	hub := newHub()
 	go hub.run()
 	http.HandleFunc("/", serveHome)
+	http.HandleFunc("/login", serveLogin)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)
 	})
