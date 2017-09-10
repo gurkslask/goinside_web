@@ -12,6 +12,8 @@ import (
 // hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
+	// Name of the hub
+	name string
 	// Registered clients.
 	clients map[*Client]bool
 
@@ -27,8 +29,9 @@ type Hub struct {
 	game *Game
 }
 
-func newHub() *Hub {
+func newHub(name string) *Hub {
 	return &Hub{
+		name:       name,
 		broadcast:  make(chan Message),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
@@ -116,4 +119,20 @@ func Deletefromslice(slice []*Client, target *Client) []*Client {
 		}
 	}
 	return append(slice[:index], slice[index+1:]...)
+}
+
+type hubHandler struct {
+	hubs      map[int]*Hub
+	roomcount int
+}
+
+func newHubHandler() *hubHandler {
+	return &hubHandler{
+		hubs:      make(map[int]*Hub),
+		roomcount: 0,
+	}
+}
+func (hubHandler) NewHub(hh *hubHandler, name string) error {
+	hh.hubs[hh.roomcount] = newHub(name)
+	return nil
 }

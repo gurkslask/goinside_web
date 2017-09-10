@@ -10,13 +10,13 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
+var hh = newHubHandler()
 
-type Page struct {
-	name string
-}
+//hh := newHubHandler()
 
 func serveHub(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
@@ -37,29 +37,42 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 
 func serveLogin(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method)
-	if r.Method == "GET" {
-		http.ServeFile(w, r, "templates/home.html")
-	} else {
+	if r.Method == "POST" {
 		r.ParseForm()
-		p := new(Page)
-		p.name = "Alex"
-		fmt.Println(r.Form["name"])
-		fmt.Println(p.name)
-		// http.ServeFile(w, r, "templates/start.html")
-		t, _ := template.ParseFiles("templates/start.html")
-		t.Execute(w, p)
+	}
+	t, _ := template.ParseFiles("templates/home.html")
+	t.Execute(w, hh)
+}
+func serveCreateHub(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		r.ParseForm()
+		hh.NewHub(hh, r.Form["name"][0])
+		//Hub := newHub(r.Form["name"][0])
+		//hubs = append(hubs, Hub)
 	}
 }
+func serveJoinHub(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(r.URL.Path[len("/joinhub/"):])
+	serveWs(hh.hubs[id], w, r)
+}
+
+/*func serveWShandler(w http.ResponseWriter, r *http.Request) {
+	serveWs(hub, w, r)
+}
+*/
 
 func main() {
 	flag.Parse()
-	hub := newHub()
-	go hub.run()
-	http.HandleFunc("/", serveHome)
+	// hub := newHub()
+	// go hub.run()
+	http.HandleFunc("/", serveLogin)
 	http.HandleFunc("/login", serveLogin)
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		serveWs(hub, w, r)
-	})
+	http.HandleFunc("/createhub", serveCreateHub)
+	http.HandleFunc("/joinhub", serveJoinHub)
+	//http.HandleFunc("/ws", serveWShandler)
+	//http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	//serveWs(hub, w, r)
+	//})
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
