@@ -52,6 +52,7 @@ type Client struct {
 	// room     int
 }
 
+//Message that holds the client that sent it
 type Message struct {
 	client  *Client
 	message []byte

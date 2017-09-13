@@ -28,17 +28,20 @@
     <div class="container">
         <div class="row">
             <div class="col">
-                he
-                <!---{{range .hubs}}
+                {{range $key, $value := .}}
                 <ul>
-                Name: {{.}}
-                #Players {{.}}
+                Id: {{$key}}
+                Name: {{$value}}
+                <form action="/joinhub/{{$key}}" method="GET">
+                    <input type="submit" value="Join">
+                </form>
                 {{else}}
                 There are no active hubs at the moment
-                Do you want to create a new one?
-                <button id="button1">button1</button>
                 </ul>
-                {{end}}-->
+                {{end}}
+            </div>
+            <div class="col">
+                <button id="button1">Do you want to create a new one?</button>
                 <div id="ble">
                     <form action="/createhub" method="post">
                         <input type="text" name="Name">
@@ -46,15 +49,10 @@
                     </form>
                 </div>
             </div>
-            <div class="col"></div>
             <div class="col">
-                {{if .Name}}
-                Hej {{.Name}}
-                {{else}}
                 <form action="/login" method="post">
                     <input type="text" name="name">
                     <input type="submit" value="Send">
-                {{end}}
             </div>
         </div>
     </div>

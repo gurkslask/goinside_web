@@ -16,19 +16,16 @@ import (
 var addr = flag.String("addr", ":8080", "http service address")
 var hh = newHubHandler()
 
-//hh := newHubHandler()
-
 func serveHub(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
-	if r.URL.Path != "/" {
-		http.Error(w, "Not found", 404)
-		return
-	}
+	id, _ := strconv.Atoi(r.URL.Path[len("/joinhub/"):])
+	fmt.Println(id)
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-	http.ServeFile(w, r, "templates/hub.html")
+	t, _ := template.ParseFiles("templates/hub.html")
+	t.Execute(w, id)
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
@@ -36,43 +33,46 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Method)
+	m := make(map[int]string)
+	for key, value := range hh.hubs {
+		m[key] = value.name
+	}
 	if r.Method == "POST" {
 		r.ParseForm()
 	}
 	t, _ := template.ParseFiles("templates/home.html")
-	t.Execute(w, hh)
+	t.Execute(w, m)
 }
 func serveCreateHub(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseForm()
-		hh.NewHub(hh, r.Form["name"][0])
-		//Hub := newHub(r.Form["name"][0])
-		//hubs = append(hubs, Hub)
+		hh.NewHub(r.Form["name"][0])
 	}
 }
-func serveJoinHub(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(r.URL.Path[len("/joinhub/"):])
-	serveWs(hh.hubs[id], w, r)
-}
 
-/*func serveWShandler(w http.ResponseWriter, r *http.Request) {
-	serveWs(hub, w, r)
+func serveWShandler(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(r.URL.Path[len("/ws/"):])
+	fmt.Println("ws", id)
+	serveWs(hh.hubs[id], w, r)
+	//serveWs(hub, w, r)
 }
-*/
 
 func main() {
 	flag.Parse()
-	// hub := newHub()
-	// go hub.run()
+	//hub := newHub("name")
+	//go hub.run()
+	hh.NewHub("test1")
+	hh.NewHub("test2")
+	for key, value := range hh.hubs {
+		fmt.Println(key, *value, "\n")
+	}
+	go hh.hubs[1].run()
+	go hh.hubs[0].run()
 	http.HandleFunc("/", serveLogin)
 	http.HandleFunc("/login", serveLogin)
-	http.HandleFunc("/createhub", serveCreateHub)
-	http.HandleFunc("/joinhub", serveJoinHub)
-	//http.HandleFunc("/ws", serveWShandler)
-	//http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-	//serveWs(hub, w, r)
-	//})
+	http.HandleFunc("/createhub/", serveCreateHub)
+	http.HandleFunc("/joinhub/", serveHub)
+	http.HandleFunc("/ws/", serveWShandler)
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

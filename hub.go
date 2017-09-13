@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -132,7 +133,15 @@ func newHubHandler() *hubHandler {
 		roomcount: 0,
 	}
 }
-func (hubHandler) NewHub(hh *hubHandler, name string) error {
+func (hh *hubHandler) NewHub(name string) {
 	hh.hubs[hh.roomcount] = newHub(name)
-	return nil
+	hh.roomcount++
+}
+
+func (hh hubHandler) String() string {
+	s := ""
+	for key, value := range hh.hubs {
+		s = fmt.Sprintf("%v\n%v: %v \n", s, strconv.Itoa(key), value.name)
+	}
+	return s
 }
