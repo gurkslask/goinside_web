@@ -154,6 +154,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go client.readPump()
 }
 
+//Changename of the player
 func (c *Client) Changename(name string, h *Hub) {
 	c.name = name
 	h.Whisper(c, "You have changed your name to: "+name)

@@ -33,14 +33,24 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveLogin(w http.ResponseWriter, r *http.Request) {
-	m := make(map[int]string)
+	m := make(map[string]interface{})
+	// Get names of active hubs
 	for key, value := range hh.hubs {
-		m[key] = value.name
+		m[strconv.Itoa(key)] = value.name
 	}
 	if r.Method == "POST" {
 		r.ParseForm()
+		fmt.Println(r.Form["name"])
+		http.SetCookie(w, &http.Cookie{
+			Name:  "Username",
+			Value: r.Form["name"][0],
+			Path:  "/",
+		})
 	}
 	t, _ := template.ParseFiles("templates/home.html")
+	if userName, err := r.Cookie("Username"); err == nil {
+		m["userName"] = userName.Value
+	}
 	t.Execute(w, m)
 }
 func serveCreateHub(w http.ResponseWriter, r *http.Request) {
@@ -48,26 +58,18 @@ func serveCreateHub(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		hh.NewHub(r.Form["name"][0])
 	}
+	http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 }
 
 func serveWShandler(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Path[len("/ws/"):])
-	fmt.Println("ws", id)
 	serveWs(hh.hubs[id], w, r)
-	//serveWs(hub, w, r)
 }
 
 func main() {
 	flag.Parse()
-	//hub := newHub("name")
-	//go hub.run()
 	hh.NewHub("test1")
 	hh.NewHub("test2")
-	for key, value := range hh.hubs {
-		fmt.Println(key, *value, "\n")
-	}
-	go hh.hubs[1].run()
-	go hh.hubs[0].run()
 	http.HandleFunc("/", serveLogin)
 	http.HandleFunc("/login", serveLogin)
 	http.HandleFunc("/createhub/", serveCreateHub)
