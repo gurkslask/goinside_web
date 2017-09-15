@@ -10,6 +10,34 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
   </head>
   <body>
+        <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="#">goInside</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+          
+                <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+                  <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                      <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="#">About</a>
+                    </li>
+                  </ul>
+                  {{ if .Username }}
+                  <h3 style="color:beige"> Hi {{ .Username }} </h3>
+                  <form class="form-inline my-2 my-lg-0" action="/logout" method="post">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Logout</button>
+                  </form>
+                  {{ else }}
+                  <form class="form-inline my-2 my-lg-0" action="/login" method="post">
+                    <input class="form-control mr-sm-2" type="text" placeholder="Your name" aria-label="Search">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Set name</button>
+                  </form>
+                  {{ end }}
+                </div>
+              </nav>
     <h1>Welcome to goInsider! {{ .Username }}</h1>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -25,17 +53,21 @@
             });
         });
     </script>
+    <p><p><p><p><p>
     <div class="container">
         <div class="row">
             <div class="col">
+                Rooms: 
                 {{range $key, $value := .Hubs }}
                 <div class="list-group">
                     <a href="/joinhub/{{$key}}" class="list-group-item list-group-item-action">#{{$key}}, name: {{$value}}</a>
                 </div>
+                {{ else }}
+                <p>There are no open rooms at the moment.
                 {{end}}
             </div>
             <div class="col">
-                <button id="createbutton">Do you want to create a new one?</button>
+                <button id="createbutton">Do you want to create a new room?</button>
                 <div id="creatediv">
                     <form action="/createhub/" method="post">
                         <input type="text" name="name">
@@ -43,12 +75,12 @@
                     </form>
                 </div>
             </div>
-            <div class="col">
+            <!--<div class="col">
                 Enter your name  here:
                 <form action="/login" method="post">
                     <input type="text" name="name">
                     <input type="submit" value="Send">
-            </div>
+            </div>-->
         </div>
     </div>
   </body>

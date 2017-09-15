@@ -75,14 +75,26 @@ func serveWShandler(w http.ResponseWriter, r *http.Request) {
 	serveWs(hh.hubs[id], w, r)
 }
 
+func serveLogout(w http.ResponseWriter, r *http.Request) {
+	log.Println("In logout")
+	if r.Method == "POST" {
+		log.Println("If POST")
+		http.SetCookie(w, &http.Cookie{
+			Name:  "Username",
+			Value: "",
+			Path:  "/",
+		})
+	}
+	http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+}
+
 func main() {
 	flag.Parse()
-	hh.NewHub("test1")
-	hh.NewHub("test2")
 	http.HandleFunc("/", serveLogin)
 	http.HandleFunc("/login", serveLogin)
 	http.HandleFunc("/createhub/", serveCreateHub)
 	http.HandleFunc("/joinhub/", serveHub)
+	http.HandleFunc("/logout", serveLogout)
 	http.HandleFunc("/ws/", serveWShandler)
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
