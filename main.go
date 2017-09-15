@@ -33,24 +33,33 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveLogin(w http.ResponseWriter, r *http.Request) {
-	m := make(map[string]interface{})
-	// Get names of active hubs
+	type bleh struct {
+		Hubs     map[string]string
+		Username string
+	}
+	var m bleh
+	m.Username = ""
+	m.Hubs = make(map[string]string)
+	// Get names of active Hubs
 	for key, value := range hh.hubs {
-		m[strconv.Itoa(key)] = value.name
+		m.Hubs[strconv.Itoa(key)] = value.name
 	}
 	if r.Method == "POST" {
 		r.ParseForm()
-		fmt.Println(r.Form["name"])
 		http.SetCookie(w, &http.Cookie{
 			Name:  "Username",
 			Value: r.Form["name"][0],
 			Path:  "/",
 		})
 	}
-	t, _ := template.ParseFiles("templates/home.html")
-	if userName, err := r.Cookie("Username"); err == nil {
-		m["userName"] = userName.Value
+	t, err := template.ParseFiles("templates/home.html")
+	if err != nil {
+		fmt.Println(err)
 	}
+	if userName, err := r.Cookie("Username"); err == nil {
+		m.Username = userName.Value
+	}
+	fmt.Println(m.Username)
 	t.Execute(w, m)
 }
 func serveCreateHub(w http.ResponseWriter, r *http.Request) {

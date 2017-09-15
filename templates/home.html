@@ -10,8 +10,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
   </head>
   <body>
-    <h1>Welcome to goInsider! {{index . "userName"}}</h1>
-
+    <h1>Welcome to goInsider! {{ .Username }}</h1>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -29,7 +28,7 @@
     <div class="container">
         <div class="row">
             <div class="col">
-                {{range $key, $value := .}}
+                {{range $key, $value := .Hubs }}
                 <div class="list-group">
                     <a href="/joinhub/{{$key}}" class="list-group-item list-group-item-action">#{{$key}}, name: {{$value}}</a>
                 </div>
@@ -45,6 +44,7 @@
                 </div>
             </div>
             <div class="col">
+                Enter your name  here:
                 <form action="/login" method="post">
                     <input type="text" name="name">
                     <input type="submit" value="Send">
