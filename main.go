@@ -14,6 +14,7 @@ import (
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
+var dbInit = flag.Bool("init db", false, "Initialize database")
 var hh = newHubHandler()
 
 func serveHub(w http.ResponseWriter, r *http.Request) {
@@ -33,11 +34,11 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveLogin(w http.ResponseWriter, r *http.Request) {
-	type bleh struct {
+	type pageInfo struct {
 		Hubs     map[string]string
 		Username string
 	}
-	var m bleh
+	var m pageInfo
 	m.Username = ""
 	m.Hubs = make(map[string]string)
 	// Get names of active Hubs
@@ -76,9 +77,7 @@ func serveWShandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveLogout(w http.ResponseWriter, r *http.Request) {
-	log.Println("In logout")
 	if r.Method == "POST" {
-		log.Println("If POST")
 		http.SetCookie(w, &http.Cookie{
 			Name:  "Username",
 			Value: "",
@@ -89,14 +88,23 @@ func serveLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	db, err := openDatabase()
+	defer db.Close()
+
+	if err != nil {
+		log.Printf("Failed to open database: %v", err)
+	}
 	flag.Parse()
+	if *dbInit {
+		initDatabase(db)
+	}
 	http.HandleFunc("/", serveLogin)
 	http.HandleFunc("/login", serveLogin)
 	http.HandleFunc("/createhub/", serveCreateHub)
 	http.HandleFunc("/joinhub/", serveHub)
 	http.HandleFunc("/logout", serveLogout)
 	http.HandleFunc("/ws/", serveWShandler)
-	err := http.ListenAndServe(*addr, nil)
+	err = http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

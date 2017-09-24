@@ -67,7 +67,7 @@ func (h *Hub) run() {
 					if len(command) != 2 {
 						break
 					}
-					data.client.Changename(command[1], h)
+					data.client.Changename(command[1])
 				case "answer":
 					// If more or less than two words, skip it
 					if len(command) != 2 {

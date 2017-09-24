@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"log"
 	"net/http"
 	"time"
@@ -49,6 +50,7 @@ type Client struct {
 	receive chan []byte
 	id      int
 	name    string
+	db      dbClient
 	// room     int
 }
 
@@ -155,7 +157,55 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 }
 
 //Changename of the player
-func (c *Client) Changename(name string, h *Hub) {
+func (c *Client) Changename(name string) {
 	c.name = name
-	h.Whisper(c, "You have changed your name to: "+name)
+	c.hub.Whisper(c, "You have changed your name to: "+name)
+}
+
+func (c *Client) dbAdd(db *sql.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare("insert into dbClient(id, name) values(?, ?)")
+	defer stmt.Close()
+	_, err = stmt.Exec(sqlGetHighestID(db), c.name)
+	if err != nil {
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
+func (c *Client) dbDelete(db *sql.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare("delete from dbClient where id=? and name=? ")
+	defer stmt.Close()
+	_, err = stmt.Exec(c.id, c.name)
+	if err != nil {
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
+func (c *Client) dbUpdate(db *sql.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare("update dbClient set name = ? where id = ?")
+	defer stmt.Close()
+	_, err = stmt.Exec(c.id, c.name)
+	if err != nil {
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+func (c *Client) dbRead(db *sql.DB) error {
+	return nil
 }
