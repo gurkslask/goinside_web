@@ -10,11 +10,13 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
-var dbInit = flag.Bool("init db", false, "Initialize database")
+var dbInit = flag.Bool("initdb", true, "Initialize database")
+var dbTest = flag.Bool("testdb", true, "Test the db queries")
 var hh = newHubHandler()
 
 func serveHub(w http.ResponseWriter, r *http.Request) {
@@ -90,13 +92,45 @@ func serveLogout(w http.ResponseWriter, r *http.Request) {
 func main() {
 	db, err := openDatabase()
 	defer db.Close()
-
 	if err != nil {
 		log.Printf("Failed to open database: %v", err)
 	}
+
 	flag.Parse()
 	if *dbInit {
-		initDatabase(db)
+		fmt.Println("dbinit active")
+		err := initDatabase(db)
+		if err != nil {
+			log.Fatalf("Could not create database %v", err)
+		}
+	}
+	if *dbTest {
+		fmt.Println("dbtest active")
+		c := newTestClient()
+		c.name = "Alex"
+		c2 := newTestClient()
+		c2.name = "Alex2"
+		fmt.Println("1")
+		err := c.dbAdd(db)
+		if err != nil {
+			log.Fatalf("Could not create user row: %v", err)
+		}
+		fmt.Println("2")
+		err = c2.dbAdd(db)
+		if err != nil {
+			log.Fatalf("Could not create user row: %v", err)
+		}
+		fmt.Println("3")
+		err = c.dbRead(db)
+		if err != nil {
+			log.Fatalf("Could not read user row: %v", err)
+		}
+		fmt.Println("4")
+		err = c.dbDelete(db)
+		if err != nil {
+			log.Fatalf("Could not delete user row: %v", err)
+		}
+		os.Exit(2)
 	}
 	http.HandleFunc("/", serveLogin)
 	http.HandleFunc("/login", serveLogin)

@@ -54,6 +54,26 @@ type Client struct {
 	// room     int
 }
 
+func newClient(hub *Hub, conn *websocket.Conn) *Client {
+	c := Client{
+		hub:     hub,
+		conn:    conn,
+		send:    make(chan Message, 256),
+		receive: make(chan []byte, 256),
+	}
+	return &c
+}
+
+func newTestClient() *Client {
+	c := Client{
+		hub:     nil,
+		conn:    nil,
+		send:    make(chan Message, 256),
+		receive: make(chan []byte, 256),
+	}
+	return &c
+}
+
 //Message that holds the client that sent it
 type Message struct {
 	client  *Client
@@ -142,12 +162,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Client{
-		hub:     hub,
-		conn:    conn,
-		send:    make(chan Message, 256),
-		receive: make(chan []byte, 256),
-	}
+	client := newClient(hub, conn)
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
@@ -167,9 +182,9 @@ func (c *Client) dbAdd(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare("insert into dbClient(id, name) values(?, ?)")
+	stmt, err := tx.Prepare("insert into dbClient(name) values(?)")
 	defer stmt.Close()
-	_, err = stmt.Exec(sqlGetHighestID(db), c.name)
+	_, err = stmt.Exec(c.name)
 	if err != nil {
 		return err
 	}
@@ -178,17 +193,7 @@ func (c *Client) dbAdd(db *sql.DB) error {
 }
 
 func (c *Client) dbDelete(db *sql.DB) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	stmt, err := tx.Prepare("delete from dbClient where id=? and name=? ")
-	defer stmt.Close()
-	_, err = stmt.Exec(c.id, c.name)
-	if err != nil {
-		return err
-	}
-	tx.Commit()
+	db.Exec("delete * from dbClient")
 	return nil
 }
 
@@ -207,5 +212,28 @@ func (c *Client) dbUpdate(db *sql.DB) error {
 	return nil
 }
 func (c *Client) dbRead(db *sql.DB) error {
+	var id int
+	var name string
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare("select id, name from dbClient where name = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query(c.name)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		err = rows.Scan(&id, &name)
+		if err != nil {
+			return err
+		}
+	}
+	c.id = id
+	c.name = name
 	return nil
 }

@@ -24,8 +24,8 @@ func initDatabase(db *sql.DB) error {
 
 	// Create table
 	sqlStmt := `
-	create table dbClientj (id integer not null primary key, name text);
-	delete from dbClientj;
+	create table dbClient (id integer not null primary key autoincrement, name text);
+	delete from dbClient;
 	`
 	_, err := db.Exec(sqlStmt)
 	if err != nil {
@@ -64,37 +64,12 @@ func sqlAdddbClientj(db *sql.DB, dbClientj string) error {
 	}
 	stmt, err := tx.Prepare("insert into dbClientj(id, name) values(?, ?)")
 	defer stmt.Close()
-	_, err = stmt.Exec(sqlGetHighestID(db), dbClientj)
+	_, err = stmt.Exec( dbClientj)
 	if err != nil {
 		return err
 	}
 	tx.Commit()
 	return nil
-}
-
-func sqlGetHighestID(db *sql.DB) int {
-	rows, err := db.Query("select id, name from dbClient")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-
-	var tid int
-	for rows.Next() {
-		var id int
-		tid = 0
-		err = rows.Scan(&id, nil)
-		fmt.Println(id)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if id != tid+1 {
-			break
-		}
-		tid = id
-	}
-	return tid + 1
-
 }
 
 type dbClient struct {
