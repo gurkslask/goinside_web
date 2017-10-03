@@ -7,6 +7,7 @@ package main
 import (
 	"bytes"
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -178,47 +179,48 @@ func (c *Client) Changename(name string) {
 }
 
 func (c *Client) dbAdd(db *sql.DB) error {
-	tx, err := db.Begin()
+	statement, err := db.Prepare("insert into dbClient(name) values(?)")
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare("insert into dbClient(name) values(?)")
-	defer stmt.Close()
-	_, err = stmt.Exec(c.name)
+	defer statement.Close()
+	_, err = statement.Exec(c.name)
 	if err != nil {
 		return err
 	}
-	tx.Commit()
 	return nil
 }
 
 func (c *Client) dbDelete(db *sql.DB) error {
-	db.Exec("delete * from dbClient")
+	stmt, err := db.Prepare("delete from dbClient where id = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(c.id)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (c *Client) dbUpdate(db *sql.DB) error {
-	tx, err := db.Begin()
+func (c *Client) dbUpdateName(db *sql.DB, newName string) error {
+	stmt, err := db.Prepare("update dbClient set name=? where id=?")
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare("update dbClient set name = ? where id = ?")
 	defer stmt.Close()
-	_, err = stmt.Exec(c.id, c.name)
+	fmt.Println(newName, c.id)
+	_, err = stmt.Exec(newName, c.id)
 	if err != nil {
 		return err
 	}
-	tx.Commit()
 	return nil
 }
 func (c *Client) dbRead(db *sql.DB) error {
 	var id int
 	var name string
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	stmt, err := tx.Prepare("select id, name from dbClient where name = ?")
+	stmt, err := db.Prepare("select id, name from dbClient where name = ?")
 	if err != nil {
 		return err
 	}
@@ -227,6 +229,7 @@ func (c *Client) dbRead(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&id, &name)
 		if err != nil {
@@ -235,5 +238,31 @@ func (c *Client) dbRead(db *sql.DB) error {
 	}
 	c.id = id
 	c.name = name
+	return nil
+}
+func (c *Client) dbReadAll(db *sql.DB) error {
+	var id int
+	var name string
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare("select id, name from dbClient")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query()
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&id, &name)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%v: %v \n", id, name)
+	}
 	return nil
 }

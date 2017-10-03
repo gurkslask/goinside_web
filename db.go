@@ -15,7 +15,7 @@ func openDatabase() (*sql.DB, error) {
 	os.Remove(dbfile)
 	db, err := sql.Open("sqlite3", dbfile)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	return db, nil
 }
@@ -64,7 +64,7 @@ func sqlAdddbClientj(db *sql.DB, dbClientj string) error {
 	}
 	stmt, err := tx.Prepare("insert into dbClientj(id, name) values(?, ?)")
 	defer stmt.Close()
-	_, err = stmt.Exec( dbClientj)
+	_, err = stmt.Exec(dbClientj)
 	if err != nil {
 		return err
 	}

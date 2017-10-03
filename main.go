@@ -125,10 +125,22 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not read user row: %v", err)
 		}
+		err = c2.dbRead(db)
+		if err != nil {
+			log.Fatalf("Could not read user row: %v", err)
+		}
 		fmt.Println("4")
 		err = c.dbDelete(db)
 		if err != nil {
 			log.Fatalf("Could not delete user row: %v", err)
+		}
+		err = c2.dbUpdateName(db, "Kalle")
+		if err != nil {
+			log.Fatalf("Could not update: %v", err)
+		}
+		err = c.dbReadAll(db)
+		if err != nil {
+			log.Fatalf("Coudl not read all: %v", err)
 		}
 		os.Exit(2)
 	}
