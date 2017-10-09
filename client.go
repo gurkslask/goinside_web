@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -216,6 +217,41 @@ func (c *Client) dbUpdateName(db *sql.DB, newName string) error {
 		return err
 	}
 	return nil
+}
+func (c *Client) dbUpdatePassword(db *sql.DB, newPassword []byte) error {
+	stmt, err := db.Prepare("update dbClient set password=? where id=?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	hashed, err := bcrypt.GenerateFromPassword(newPassword, 0)
+	fmt.Println(string(newPassword), hashed)
+	_, err = stmt.Exec(hashed, c.id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (c *Client) dbComparePassword(db *sql.DB, Password []byte) (bool, error) {
+	var pwHash string
+	stmt, err := db.Prepare("select password from dbClient where id = ?")
+	if err != nil {
+		return false, err
+	}
+	defer stmt.Close()
+	row := stmt.QueryRow(c.id)
+	if err != nil {
+		return false, err
+	}
+	err = row.Scan(&pwHash)
+	if err != nil {
+		return false, err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(pwHash), Password)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 func (c *Client) dbRead(db *sql.DB) error {
 	var id int

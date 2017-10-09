@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -12,7 +11,7 @@ import (
 func openDatabase() (*sql.DB, error) {
 	//Open connection
 	dbfile := "./data.db"
-	os.Remove(dbfile)
+	// os.Remove(dbfile)
 	db, err := sql.Open("sqlite3", dbfile)
 	if err != nil {
 		return nil, err
@@ -24,7 +23,8 @@ func initDatabase(db *sql.DB) error {
 
 	// Create table
 	sqlStmt := `
-	create table dbClient (id integer not null primary key autoincrement, name text);
+	drop table dbClient;
+	create table dbClient (id integer not null primary key autoincrement, name text, password text);
 	delete from dbClient;
 	`
 	_, err := db.Exec(sqlStmt)

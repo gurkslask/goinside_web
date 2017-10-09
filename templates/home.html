@@ -26,19 +26,20 @@
                     </li>
                   </ul>
                   {{ if .Username }}
-                  <h3 style="color:beige"> Hi {{ .Username }} </h3>
+                  <h3 style="color:beige"> Hi {{ .Username}} </h3>
                   <form class="form-inline my-2 my-lg-0" action="/logout" method="post">
                     <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Logout</button>
                   </form>
                   {{ else }}
                   <form class="form-inline my-2 my-lg-0" action="/login" method="post">
-                    <input class="form-control mr-sm-2" type="text" placeholder="Your name" aria-label="Search">
+                    <input class="form-control mr-sm-2" type="text" placeholder="Your name" aria-label="Search" name="name">
+                    <input class="form-control mr-sm-2" type="text" placeholder="Password" aria-label="Search" name="password">
                     <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Set name</button>
                   </form>
                   {{ end }}
                 </div>
               </nav>
-    <h1>Welcome to goInsider! {{ .Username }}</h1>
+    <h1>Welcome to goInsider! </h1>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
