@@ -56,12 +56,13 @@ type Client struct {
 	// room     int
 }
 
-func newClient(hub *Hub, conn *websocket.Conn) *Client {
+func newClient(hub *Hub, conn *websocket.Conn, name string) *Client {
 	c := Client{
 		hub:     hub,
 		conn:    conn,
 		send:    make(chan Message, 256),
 		receive: make(chan []byte, 256),
+		name:    name,
 	}
 	return &c
 }
@@ -164,7 +165,13 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := newClient(hub, conn)
+	// Get username
+	session, err := store.Get(r, "user")
+	u := newUser()
+	u.id = session.Values["uid"].(int)
+	u.dbReadName(db)
+
+	client := newClient(hub, conn, u.name)
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in

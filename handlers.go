@@ -84,7 +84,9 @@ func serveLogin(w http.ResponseWriter, r *http.Request) {
 		u.id = tmpint
 		log.Printf("This is u.id in GET: %v", u.id)
 		if u.id > 0 {
-			u.dbRead(db)
+			log.Printf("Här läser vi från databasen")
+			u.dbReadName(db)
+			log.Printf("Det här användarnamnet fick vi: %v", u.name)
 		}
 	}
 	err = session.Save(r, w)
@@ -108,7 +110,7 @@ func serveCreateHub(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		hh.NewHub(r.Form["name"][0])
 	}
-	http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+	http.Redirect(w, r, "/", 301)
 }
 
 func serveWShandler(w http.ResponseWriter, r *http.Request) {
@@ -117,17 +119,19 @@ func serveWShandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveLogout(w http.ResponseWriter, r *http.Request) {
-	log.Println("I logout handler")
 	if r.Method == "POST" {
-		log.Println("hämta session")
 		session, err := store.Get(r, "user")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(" session hämtad")
 		session.Values["authenticated"] = false
 		session.Values["uid"] = 0
+		err = session.Save(r, w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
-	http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+	http.Redirect(w, r, "/", 301)
 }

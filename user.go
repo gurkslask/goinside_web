@@ -118,6 +118,29 @@ func (u *User) dbRead(db *sql.DB) error {
 	u.name = name
 	return nil
 }
+func (u *User) dbReadName(db *sql.DB) error {
+	var id int
+	var name string
+	stmt, err := db.Prepare("select id, name from dbClient where id = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query(u.id)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&id, &name)
+		if err != nil {
+			return err
+		}
+	}
+	u.id = id
+	u.name = name
+	return nil
+}
 func (u *User) dbReadAll(db *sql.DB) error {
 	var id int
 	var name string
